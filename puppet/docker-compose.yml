@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  puppetpostgres:
+    container_name: puppetpostgres
+    hostname: puppetpostgres
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=puppetdb
+      - POSTGRES_USER=puppetdb
+    ports:
+      - 5432:5432
+    network_mode: "host"
+
+  puppetserver:
+    container_name: puppetserver
+    hostname: puppetserver
+    image: puppet/puppetserver
+    ports:
+      - 8140:8140
+    network_mode: "host"
+    environment:
+      - PUPPERWARE_ANALYTICS_ENABLED=false
+      - DNS_ALT_NAMES=puppetserver
+      - PUPPETSERVER_HOSTNAME=puppetserver
+      - PUPPETDB_SERVER_URLS=https://127.0.0.1:8081
+
+  puppetdb:
+    container_name: puppetdb
+    hostname: puppetdb
+    image: puppet/puppetdb
+    environment:
+      - PUPPERWARE_ANALYTICS_ENABLED=false
+      - CERTNAME=puppetdb
+      - DNS_ALT_NAMES=puppetdb
+      - PUPPETSERVER_HOSTNAME=127.0.0.1
+      - PUPPETSERVER_PORT=8140
+      - PUPPETDB_POSTGRES_HOSTNAME=127.0.0.1
+      - PUPPETDB_POSTGRES_PORT=5432
+      - PUPPETDB_USER=puppetdb
+      - PUPPETDB_PASSWORD=puppetdb
+    ports:
+      - 8080:8080
+      - 8081:8081
+    network_mode: "host"
+    depends_on:
+      - puppetpostgres
+
+  puppetboard:
+    container_name: puppetboard
+    hostname: puppetboard
+    image: puppet/puppetboard
+    environment:
+      - PUPPERWARE_ANALYTICS_ENABLED=false
+      - DNS_ALT_NAMES=puppetboard
+      - PUPPETSERVER_HOSTNAME=127.0.0.1
+      - PUPPETDB_HOST=127.0.0.1
+      - PUPPETDB_PORT=8080
+      - PUPPETDB_SERVER_URLS=https://127.0.0.1:8081
+    ports:
+      - 8000:8000
+    network_mode: "host"
+
+volumes:
+  puppetpostgres:
+    driver: local
+
+volumes:
+  puppetdb:
+    driver: local
+
+volumes:
+  puppetserver:
+    driver: local
